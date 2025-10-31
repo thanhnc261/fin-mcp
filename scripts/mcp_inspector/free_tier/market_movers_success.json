@@ -1,0 +1,9 @@
+{
+  "label": "Market Movers – Happy Path",
+  "tool": "get_market_movers",
+  "arguments": {
+    "category": "gainers",
+    "limit": 5
+  },
+  "notes": "Returns the top five day gainers from Yahoo Finance."
+}

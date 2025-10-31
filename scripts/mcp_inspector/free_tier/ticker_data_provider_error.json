@@ -1,0 +1,8 @@
+{
+  "label": "Ticker Snapshot – Provider Failure",
+  "tool": "get_ticker_data",
+  "arguments": {
+    "ticker": "INVALID"
+  },
+  "notes": "Uses a delisted ticker to demonstrate upstream error messaging."
+}

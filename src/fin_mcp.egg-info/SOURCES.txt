@@ -1,0 +1,15 @@
+README.md
+pyproject.toml
+src/fin_mcp.egg-info/PKG-INFO
+src/fin_mcp.egg-info/SOURCES.txt
+src/fin_mcp.egg-info/dependency_links.txt
+src/fin_mcp.egg-info/requires.txt
+src/fin_mcp.egg-info/top_level.txt
+src/servers/__init__.py
+src/servers/free_tier/__init__.py
+src/servers/free_tier/config.py
+src/servers/free_tier/exceptions.py
+src/servers/free_tier/schemas.py
+src/servers/free_tier/server.py
+src/servers/free_tier/tools.py
+src/servers/free_tier/validation.py

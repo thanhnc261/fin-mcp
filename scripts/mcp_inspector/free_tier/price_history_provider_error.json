@@ -1,0 +1,11 @@
+{
+  "label": "Price History – Provider Failure",
+  "tool": "get_price_history",
+  "arguments": {
+    "ticker": "INVALID",
+    "interval": "1d",
+    "start_date": "2024-01-01",
+    "end_date": "2024-01-05"
+  },
+  "notes": "Requests history for a delisted symbol to trigger provider error handling."
+}

@@ -1,0 +1,9 @@
+{
+  "label": "Market Movers – Validation Error",
+  "tool": "get_market_movers",
+  "arguments": {
+    "category": "unknown",
+    "limit": 5
+  },
+  "notes": "Triggers ticker category validation. Inspector should display the helpful validation error."
+}
