@@ -1,9 +1,14 @@
-# Fin-MCP: Free-Tier Market Data MCP Server
+# Fin-MCP: Financial Market Data & Analytics MCP Servers
 
-A high-quality Model Context Protocol (MCP) server providing Yahoo Finance market data without requiring API keys.
+High-quality Model Context Protocol (MCP) servers providing market data, sentiment analysis, and trading analytics for AI assistants.
 
-## Features
+## Servers
 
+### Free Tier - Market Data
+
+Yahoo Finance market data without requiring API keys.
+
+**Features:**
 - **Market Movers**: Top gainers, losers, and most active stocks
 - **Ticker Quotes**: Real-time price snapshots with technical indicators
 - **Price History**: Historical OHLCV candles for technical analysis
@@ -11,11 +16,30 @@ A high-quality Model Context Protocol (MCP) server providing Yahoo Finance marke
 - **Type-Safe**: Full type hints with Pydantic validation
 - **Well-Tested**: Comprehensive test suite with async support
 
-## Tools
-
+**Tools:**
 - `get_market_movers` – Top gainers, losers, or most active equities
 - `get_ticker_data` – Real-time quote snapshot for a single symbol
 - `get_price_history` – Historical OHLCV candles for technical analysis
+
+### Pro Tier - Analytics & Sentiment
+
+Advanced sentiment analysis and trading analytics requiring API keys and Redis.
+
+**Features:**
+- **Sentiment Analysis**: CNN & Crypto Fear/Greed indices, news sentiment, trends
+- **Trading Analytics**: Strategy backtesting with performance metrics
+- **Portfolio Management**: Position tracking and P&L analytics
+- **Paper Trading**: Simulated trade execution for testing
+- **Redis Caching**: 5-minute TTL for sentiment, 15-minute for analytics
+- **Graceful Degradation**: Continues operating with partial data sources
+
+**Tools:**
+- `get_basic_sentiment` – Fear & Greed indices (0-100 scale)
+- `get_advanced_sentiment` – News sentiment + Google Trends
+- `get_sentiment_trends` – Historical sentiment analysis
+- `backtest_strategy` – Backtest buy-and-hold or SMA crossover strategies
+- `get_portfolio_analytics` – Portfolio performance metrics
+- `submit_paper_trade` – Execute simulated trades
 
 ## Getting Started
 
@@ -53,14 +77,16 @@ export FREE_TIER_HTTP_PORT=8080
 python -m servers.free_tier.server
 ```
 
-## Running the Free Tier server
+## Running the Servers
+
+### Free Tier Server
 
 ```bash
 source .venv/bin/activate
 fastmcp run src/servers/free_tier/server.py
 ```
 
-To iterate with the MCP Inspector UI instead:
+To iterate with the MCP Inspector UI:
 
 ```bash
 source .venv/bin/activate
@@ -69,6 +95,56 @@ fastmcp dev src/servers/free_tier/server.py
 
 Pre-built Inspector scripts covering success, validation, and failure paths for
 each tool live under `scripts/mcp_inspector/free_tier/`.
+
+### Pro Tier Server
+
+**Prerequisites:**
+1. Install and start Redis:
+   ```bash
+   # macOS
+   brew install redis
+   brew services start redis
+
+   # Linux
+   sudo apt-get install redis-server
+   sudo systemctl start redis
+   ```
+
+2. Set required API keys (optional, server degrades gracefully):
+   ```bash
+   export PRO_TIER_NEWS_API_KEY="your-newsapi-key"
+   export PRO_TIER_ALPHA_VANTAGE_KEY="your-alpha-vantage-key"
+   ```
+
+**Run the server:**
+
+```bash
+source .venv/bin/activate
+fastmcp run src/servers/pro_tier/server.py
+```
+
+To iterate with the MCP Inspector UI:
+
+```bash
+source .venv/bin/activate
+fastmcp dev src/servers/pro_tier/server.py
+```
+
+**Configuration:**
+
+All Pro Tier settings use the `PRO_TIER_` prefix:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PRO_TIER_LOG_LEVEL` | `INFO` | Logging level |
+| `PRO_TIER_TRANSPORT_TYPE` | `stdio` | Transport protocol |
+| `PRO_TIER_HTTP_HOST` | `127.0.0.1` | HTTP/SSE host |
+| `PRO_TIER_HTTP_PORT` | `8001` | HTTP/SSE port |
+| `PRO_TIER_REDIS_URL` | `redis://localhost:6379/0` | Redis connection URL |
+| `PRO_TIER_CACHE_TTL_SENTIMENT` | `300` | Sentiment cache TTL (seconds) |
+| `PRO_TIER_CACHE_TTL_ANALYTICS` | `900` | Analytics cache TTL (seconds) |
+| `PRO_TIER_NEWS_API_KEY` | `""` | NewsAPI.org API key |
+| `PRO_TIER_ALPHA_VANTAGE_KEY` | `""` | Alpha Vantage API key |
 
 ## Test Suite
 
