@@ -13,13 +13,37 @@ from servers.free_tier.exceptions import (
 )
 
 
+# Mock FastMCP Context for testing
+class MockContext:
+    """Mock Context object for testing tools that require FastMCP Context."""
+
+    async def info(self, message: str, logger_name: str | None = None, extra: Any = None) -> None:
+        """Mock info logging."""
+        pass
+
+    async def error(self, message: str, logger_name: str | None = None, extra: Any = None) -> None:
+        """Mock error logging."""
+        pass
+
+    async def debug(self, message: str, logger_name: str | None = None, extra: Any = None) -> None:
+        """Mock debug logging."""
+        pass
+
+
 class DummyFastInfo(dict):
     def items(self):  # pragma: no cover - delegated to dict
         return super().items()
 
 
 class DummyTicker:
-    def __init__(self, symbol: str, *, info: dict[str, Any], fast_info: dict[str, Any], history: pd.DataFrame | None = None):
+    def __init__(
+        self,
+        symbol: str,
+        *,
+        info: dict[str, Any],
+        fast_info: dict[str, Any],
+        history: pd.DataFrame | None = None,
+    ):
         self.symbol = symbol
         self._info = info
         self.fast_info = DummyFastInfo(fast_info)
@@ -33,7 +57,8 @@ class DummyTicker:
         return self._history
 
 
-def test_get_market_movers_success(monkeypatch):
+async def test_get_market_movers_success(monkeypatch):
+    ctx = MockContext()
     sample_quotes = [
         {
             "symbol": "XYZ",
@@ -56,7 +81,7 @@ def test_get_market_movers_success(monkeypatch):
 
     monkeypatch.setattr(tools, "screen", fake_screen)
 
-    result = tools.get_market_movers(category="gainers", limit=1)
+    result = await tools.get_market_movers(ctx, category="gainers", limit=1)
 
     assert result.category == "gainers"
     assert len(result.items) == 1
@@ -65,22 +90,26 @@ def test_get_market_movers_success(monkeypatch):
     assert mover.price == 12.34
 
 
-def test_get_market_movers_invalid_category():
+async def test_get_market_movers_invalid_category():
+    ctx = MockContext()
     with pytest.raises(MarketDataValidationError):
-        tools.get_market_movers(category="unknown", limit=5)
+        await tools.get_market_movers(ctx, category="unknown", limit=5)
 
 
-def test_get_market_movers_provider_error(monkeypatch):
+async def test_get_market_movers_provider_error(monkeypatch):
+    ctx = MockContext()
+
     def failing_screen(*_args, **_kwargs):
         raise RuntimeError("boom")
 
     monkeypatch.setattr(tools, "screen", failing_screen)
 
     with pytest.raises(MarketDataProviderError):
-        tools.get_market_movers(category="gainers", limit=5)
+        await tools.get_market_movers(ctx, category="gainers", limit=5)
 
 
-def test_get_ticker_data_success(monkeypatch):
+async def test_get_ticker_data_success(monkeypatch):
+    ctx = MockContext()
     fast_info = {
         "lastPrice": 101.0,
         "previousClose": 100.0,
@@ -106,9 +135,9 @@ def test_get_ticker_data_success(monkeypatch):
     }
 
     dummy = DummyTicker("AAPL", info=info, fast_info=fast_info)
-    monkeypatch.setattr(tools, "Ticker", lambda symbol: dummy)
+    monkeypatch.setattr(tools, "Ticker", lambda symbol, session=None: dummy)
 
-    result = tools.get_ticker_data("aapl")
+    result = await tools.get_ticker_data(ctx, "aapl")
 
     assert result.symbol == "AAPL"
     assert result.price == 101.0
@@ -117,36 +146,43 @@ def test_get_ticker_data_success(monkeypatch):
     assert result.change_percent == pytest.approx(1.0)
 
 
-def test_get_ticker_data_invalid_symbol():
+async def test_get_ticker_data_invalid_symbol():
+    ctx = MockContext()
     with pytest.raises(MarketDataValidationError):
-        tools.get_ticker_data("bad ticker!!")
+        await tools.get_ticker_data(ctx, "bad ticker!!")
 
 
-def test_get_ticker_data_missing_price(monkeypatch):
+async def test_get_ticker_data_missing_price(monkeypatch):
+    ctx = MockContext()
     dummy = DummyTicker(
         "AAPL",
         info={"regularMarketTime": 1_700_000_000, "exchangeTimezoneName": "UTC"},
         fast_info={},
     )
-    monkeypatch.setattr(tools, "Ticker", lambda symbol: dummy)
+    monkeypatch.setattr(tools, "Ticker", lambda symbol, session=None: dummy)
 
     with pytest.raises(MarketDataProviderError):
-        tools.get_ticker_data("AAPL")
+        await tools.get_ticker_data(ctx, "AAPL")
 
 
-def test_get_ticker_data_provider_failure(monkeypatch):
-    def failing_ticker(_symbol: str):
+async def test_get_ticker_data_provider_failure(monkeypatch):
+    ctx = MockContext()
+
+    def failing_ticker(_symbol: str, session=None):
         raise RuntimeError("ticker failure")
 
     monkeypatch.setattr(tools, "Ticker", failing_ticker)
 
     with pytest.raises(MarketDataProviderError):
-        tools.get_ticker_data("AAPL")
+        await tools.get_ticker_data(ctx, "AAPL")
 
 
 def create_history_dataframe() -> pd.DataFrame:
     index = pd.DatetimeIndex(
-        [datetime(2024, 1, 1, 16, 0, tzinfo=timezone.utc), datetime(2024, 1, 2, 16, 0, tzinfo=timezone.utc)]
+        [
+            datetime(2024, 1, 1, 16, 0, tzinfo=timezone.utc),
+            datetime(2024, 1, 2, 16, 0, tzinfo=timezone.utc),
+        ]
     )
     data = {
         "Open": [100.0, 102.0],
@@ -160,7 +196,8 @@ def create_history_dataframe() -> pd.DataFrame:
     return pd.DataFrame(data, index=index)
 
 
-def test_get_price_history_success(monkeypatch):
+async def test_get_price_history_success(monkeypatch):
+    ctx = MockContext()
     history_df = create_history_dataframe()
     dummy = DummyTicker(
         "AAPL",
@@ -169,9 +206,11 @@ def test_get_price_history_success(monkeypatch):
         history=history_df,
     )
 
-    monkeypatch.setattr(tools, "Ticker", lambda symbol: dummy)
+    monkeypatch.setattr(tools, "Ticker", lambda symbol, session=None: dummy)
 
-    result = tools.get_price_history("AAPL", start_date=date(2024, 1, 1), end_date=date(2024, 1, 2))
+    result = await tools.get_price_history(
+        ctx, "AAPL", start_date=date(2024, 1, 1), end_date=date(2024, 1, 2)
+    )
 
     assert result.ticker == "AAPL"
     assert len(result.points) == 2
@@ -179,29 +218,35 @@ def test_get_price_history_success(monkeypatch):
     assert result.currency == "USD"
 
 
-def test_get_price_history_invalid_interval():
+async def test_get_price_history_invalid_interval():
+    ctx = MockContext()
     with pytest.raises(MarketDataValidationError):
-        tools.get_price_history("AAPL", interval="invalid")
+        await tools.get_price_history(ctx, "AAPL", interval="invalid")
 
 
-def test_get_price_history_invalid_range():
+async def test_get_price_history_invalid_range():
+    ctx = MockContext()
     with pytest.raises(MarketDataValidationError):
-        tools.get_price_history(
+        await tools.get_price_history(
+            ctx,
             "AAPL",
             start_date=date(2024, 2, 1),
             end_date=date(2024, 1, 1),
         )
 
 
-def test_get_price_history_intraday_window_too_large():
+async def test_get_price_history_intraday_window_too_large():
+    ctx = MockContext()
     start = date.today() - timedelta(days=31)
     end = date.today()
 
     with pytest.raises(MarketDataValidationError):
-        tools.get_price_history("AAPL", start_date=start, end_date=end, interval="1h")
+        await tools.get_price_history(ctx, "AAPL", start_date=start, end_date=end, interval="1h")
 
 
-def test_get_price_history_provider_error(monkeypatch):
+async def test_get_price_history_provider_error(monkeypatch):
+    ctx = MockContext()
+
     def failing_history(self, *args, **kwargs):
         raise RuntimeError("history failed")
 
@@ -212,21 +257,26 @@ def test_get_price_history_provider_error(monkeypatch):
         history=pd.DataFrame(),
     )
 
-    monkeypatch.setattr(tools, "Ticker", lambda symbol: dummy)
+    monkeypatch.setattr(tools, "Ticker", lambda symbol, session=None: dummy)
     monkeypatch.setattr(DummyTicker, "history", failing_history)
 
     with pytest.raises(MarketDataProviderError):
-        tools.get_price_history("AAPL", start_date=date(2024, 1, 1), end_date=date(2024, 1, 2))
+        await tools.get_price_history(
+            ctx, "AAPL", start_date=date(2024, 1, 1), end_date=date(2024, 1, 2)
+        )
 
 
-def test_get_price_history_empty_result(monkeypatch):
+async def test_get_price_history_empty_result(monkeypatch):
+    ctx = MockContext()
     dummy = DummyTicker(
         "AAPL",
         info={},
         fast_info={"currency": "USD"},
         history=pd.DataFrame(),
     )
-    monkeypatch.setattr(tools, "Ticker", lambda symbol: dummy)
+    monkeypatch.setattr(tools, "Ticker", lambda symbol, session=None: dummy)
 
     with pytest.raises(MarketDataProviderError):
-        tools.get_price_history("AAPL", start_date=date(2024, 1, 1), end_date=date(2024, 1, 2))
+        await tools.get_price_history(
+            ctx, "AAPL", start_date=date(2024, 1, 1), end_date=date(2024, 1, 2)
+        )
