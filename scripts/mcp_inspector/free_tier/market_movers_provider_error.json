@@ -1,0 +1,9 @@
+{
+  "label": "Market Movers – Provider Failure",
+  "tool": "get_market_movers",
+  "arguments": {
+    "category": "gainers",
+    "limit": 5
+  },
+  "notes": "Run with the network temporarily disabled to surface the upstream provider error handling."
+}

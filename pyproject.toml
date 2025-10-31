@@ -1,0 +1,34 @@
+[project]
+name = "fin-mcp"
+version = "0.1.0"
+description = "Free Tier market data MCP tools"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=0.1.3",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.5",
+    "yfinance>=0.2.38",
+    "pandas>=2.2",
+    "httpx>=0.27",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "freezegun>=1.4",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

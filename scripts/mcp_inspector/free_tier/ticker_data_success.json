@@ -1,0 +1,8 @@
+{
+  "label": "Ticker Snapshot – Happy Path",
+  "tool": "get_ticker_data",
+  "arguments": {
+    "ticker": "MSFT"
+  },
+  "notes": "Returns the latest quote snapshot for MSFT."
+}

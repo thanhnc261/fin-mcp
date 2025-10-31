@@ -1,0 +1,11 @@
+{
+  "label": "Price History – Happy Path",
+  "tool": "get_price_history",
+  "arguments": {
+    "ticker": "SPY",
+    "interval": "1d",
+    "start_date": "2024-01-01",
+    "end_date": "2024-02-01"
+  },
+  "notes": "Returns daily candles for SPY over the first month of 2024."
+}

@@ -1,0 +1,8 @@
+{
+  "label": "Ticker Snapshot – Validation Error",
+  "tool": "get_ticker_data",
+  "arguments": {
+    "ticker": "BAD TICKER"
+  },
+  "notes": "Ticker contains spaces and punctuation which should trigger validation messaging."
+}
