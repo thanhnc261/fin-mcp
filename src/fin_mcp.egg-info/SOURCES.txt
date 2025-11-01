@@ -14,3 +14,13 @@ src/servers/free_tier/schemas.py
 src/servers/free_tier/server.py
 src/servers/free_tier/tools.py
 src/servers/free_tier/validation.py
+src/servers/pro_tier/__init__.py
+src/servers/pro_tier/analytics_tools.py
+src/servers/pro_tier/cache.py
+src/servers/pro_tier/config.py
+src/servers/pro_tier/exceptions.py
+src/servers/pro_tier/logging_config.py
+src/servers/pro_tier/schemas.py
+src/servers/pro_tier/sentiment_fetchers.py
+src/servers/pro_tier/sentiment_tools.py
+src/servers/pro_tier/server.py
